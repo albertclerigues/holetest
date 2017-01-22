@@ -15,6 +15,8 @@
 	<body>
 
 		<script src="/libs/three.js"></script>
+<!--        <script src="/libs/csg.js"></script>-->
+        <script src="/libs/ThreeCSG.js"></script>
 
 		<script>
             //THREE = require("three");
@@ -26,17 +28,54 @@
 			
             function init() {
 				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
-				camera.position.z = 400;
+				camera.position.z = 80;
 				scene = new THREE.Scene();
-				//var texture = new THREE.TextureLoader().load( 'textures/crate.gif' );
-				var geometry = new THREE.BoxBufferGeometry( 200, 200, 200 );
-				var material = new THREE.MeshBasicMaterial( );
-				mesh = new THREE.Mesh( geometry);
-				scene.add( mesh );
+		          
+                
+                //Build object for display
+				var geometryThreeBox = new THREE.Mesh(new THREE.CubeGeometry( 40, 40, 40 ));
+				var geometryThreeCylinder = new THREE.Mesh(new THREE.CubeGeometry( 35, 35, 80 ));
+                
+                var geometryCsgBox = new ThreeBSP(geometryThreeBox);
+                var geometryCsgCylinder = new ThreeBSP(geometryThreeCylinder);
+                
+                var resultCsg = geometryCsgBox.subtract(geometryCsgCylinder);
+                
+                //Add to scene
+                var material = new THREE.MeshLambertMaterial({
+                    color: '#0000AA',
+                    shading: THREE.FlatShading,
+                    side: THREE.DoubleSide
+                });    
+                
+                var mesh = resultCsg.toMesh( material );
+				
+                mesh.geometry.computeVertexNormals();
+                scene.add( mesh );
+                
+                //DEBUG
+                //mesh.rotation = {x: Math.PI/4, y: Math.PI/4};
+                mesh.rotation.x = Math.PI/6;
+                //mesh.rotation.y = Math.PI/4;
+                //mesh2.rotation.x = Math.PI/6;
+                //mesh2.rotation.y = Math.PI/4;
+                
+                light = new THREE.SpotLight("#FFFFFF");
+                light.position.set(-90, 600, 0);
+                light.castShadows = true;
+                scene.add(light);
+                
+                ambientLight = new THREE.AmbientLight("#FFFFFF");
+                light.castShadows = true;
+                scene.add(ambientLight);
+                
+                //Renderer setup
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+                renderer.shadowMap.enabled = true;
 				document.body.appendChild( renderer.domElement );
+                
 				//
 				window.addEventListener( 'resize', onWindowResize, false );
 			}
@@ -50,8 +89,8 @@
             //Executed before rendering frame
 			function animate() {
 				requestAnimationFrame( animate );
-				mesh.rotation.x += 0.005;
-				mesh.rotation.y += 0.01;
+				//mesh.rotation.x += 0.005/3;
+				//mesh.rotation.y += 0.01/3;
 				renderer.render( scene, camera );
 			}
 		</script>
